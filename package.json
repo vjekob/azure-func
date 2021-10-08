@@ -1,0 +1,43 @@
+{
+  "name": "@vjeko.com/azure-func",
+  "version": "0.0.1",
+  "description": "Helper package for Azure Functions by Vjeko.com",
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vjekob/vjeko-azure-func.git"
+  },
+  "keywords": [
+    "Azure Functions",
+    "storage"
+  ],
+  "author": "Vjeko.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vjekob/vjeko-azure-func/issues"
+  },
+  "homepage": "https://github.com/vjekob/vjeko-azure-func#readme",
+  "devDependencies": {
+    "@jest/types": "^27.2.4",
+    "@types/jest": "^27.0.2",
+    "@types/node": "^16.10.2",
+    "@vjeko.com/azure-func-test": "0.0.2",
+    "jest": "^27.2.1",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  },
+  "dependencies": {
+    "@azure/functions": "^1.2.3",
+    "azure-storage": "^2.10.4"
+  }
+}
