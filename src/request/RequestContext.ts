@@ -1,4 +1,4 @@
-import { Context, HttpRequest } from "@azure/functions";
+import { Context, HttpMethod, HttpRequest } from "@azure/functions";
 import { RequestBinder } from "./RequestBinder";
 
 export class RequestContext<TRequest, TBindings> {
@@ -12,6 +12,10 @@ export class RequestContext<TRequest, TBindings> {
         this._context = context;
         this._binder = binder;
         this._req = req;
+    }
+
+    public get method(): HttpMethod {
+        return this._req.method as HttpMethod;
     }
 
     public get rawContext() {

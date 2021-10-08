@@ -203,4 +203,28 @@ describe("Testing v2 RequestValidator", () => {
         const request = new Mock.Request("GET", { "number": [3.14, 1] });
         expect(() => validator.validate(request)).not.toThrowError();
     });
+
+    it("Succeeds on multi-expect with valid request", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", { "number": "number" });
+        validator.expect("body", { "string": "string" })
+        const request = new Mock.Request("GET", { "number": 3.14, "string": "pi" });
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
+    it("Fails on multi-expect with invalid request (first valid, second invalid)", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", { "number": "number" });
+        validator.expect("body", { "string": "string" })
+        const request = new Mock.Request("GET", { "number": 3.14, "string": 3.14 });
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Fails on multi-expect with invalid request (first invalid, second valid)", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", { "number": "number" });
+        validator.expect("body", { "string": "string" })
+        const request = new Mock.Request("GET", { "number": "3.14", "string": "pi" });
+        expect(() => validator.validate(request)).toThrowError();
+    });
 });
