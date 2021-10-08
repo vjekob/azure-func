@@ -70,7 +70,7 @@ describe("Testing v2 RequestBinder", () => {
         expect(context.res.body.success).toStrictEqual(true);
     });
 
-    it("Fails when bound property is not found in body or query string", async () => {
+    it("Binds undefined when bound property is not found in body or query string", async () => {
         const storage = {
             "__mock__.json": s1,
             "__fake__": s2,

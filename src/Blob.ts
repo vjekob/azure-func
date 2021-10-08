@@ -114,7 +114,7 @@ export class Blob<T> {
      * @param timeout Timeout to wait for an attempt of reading
      * @returns Updated data
      */
-    optimisticUpdate(update: UpdateCallback<T>, timeout = 2500): Promise<T | null> {
+    optimisticUpdate(update: UpdateCallback<T>, timeout = 5000): Promise<T | null> {
         const service = this._service;
         const blob = this._blob;
         const container = this._container;
@@ -134,7 +134,7 @@ export class Blob<T> {
             function readBlob() {
                 if (timedOut) return;
 
-                service.getBlobToText(container, blob, (error, result, response) => {
+                service.getBlobToText(container, blob, async (error, result, response) => {
                     let notFound = false;
                     if (error) {
                         if ((error as any).statusCode !== 404) {
@@ -146,7 +146,7 @@ export class Blob<T> {
 
                     const content = notFound ? null : JSON.parse(result);
                     try {
-                        updatedContent = update(content, attempt++);
+                        updatedContent = await update(content, attempt++);
                     } catch (error) {
                         reject(error);
                         return;

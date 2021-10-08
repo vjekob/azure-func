@@ -25,7 +25,7 @@ describe("Testing v2 RequestHandler", () => {
     const mockAuth: MockAuthorization = {
         appId: `${Date.now()}.${Math.random() * 10000000}`,
         authKey: `${Math.random() * 10000000}`
-    };    
+    };
 
     it("Fails on validating an invalid request", async () => {
         const response = await invokeHandler({});
@@ -58,5 +58,23 @@ describe("Testing v2 RequestHandler", () => {
 
         expect(response.status).toBe(503);
         expect(response.headers["retry-after"]).toBe("3600");
+    });
+
+    it("Successfully responds with unhandled runtime error", async () => {
+        const errorMessage = "This is an error";
+        const handler = new RequestHandler(async () => { throw new Error(errorMessage) });
+        const context = new Mock.Context(new Mock.Request("GET"));
+        await handler.azureFunction(context, context.req);
+        expect(context.res.status).toBe(500);
+        expect(context.res.body).toEqual({ errorMessage });
+    });
+
+    it("Successfully responds with a custom error response", async () => {
+        const errorMessage = "This is an error";
+        const handler = new RequestHandler(async () => { throw new ErrorResponse({ errorMessage }, 406) });
+        const context = new Mock.Context(new Mock.Request("GET"));
+        await handler.azureFunction(context, context.req);
+        expect(context.res.status).toBe(406);
+        expect(context.res.body).toEqual({ errorMessage });
     });
 });
