@@ -8,6 +8,21 @@ jest.mock("azure-storage");
 Mock.initializeStorage(azure.createBlobService);
 
 describe("Testing RequestHandler with Blob operations", () => {
+    // This test is mostly relevant for testability.
+    // It tests against conditions that can sometimes happen during testability.
+    it("Gracefully cleans up after a blob failure at invocation of service.* methods when service is undefined", async () => {
+        const handler = new RequestHandler(async (req) => {
+            const blob = new Blob("test");
+            await blob.optimisticUpdate(async () => {
+                return { success: true };
+            });
+        });
+
+        const context = new Mock.Context(new Mock.Request("POST"));
+        await handler.azureFunction(context, context.req);
+        expect(context.res.status).toBe(500);
+    });
+
     it("Succeeds when Blob operation is faster than timeout", async () => {
         const storage: any = {};
         const key = "test.json";

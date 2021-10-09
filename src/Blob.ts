@@ -140,31 +140,36 @@ export class Blob<T> {
             function readBlob() {
                 if (timedOut) return;
 
-                service.getBlobToText(container, blob, async (error, result, response) => {
-                    let notFound = false;
-                    if (error) {
-                        if ((error as any).statusCode !== 404) {
-                            setTimeout(() => readBlob(), 10);
+                try {
+                    service.getBlobToText(container, blob, async (error, result, response) => {
+                        let notFound = false;
+                        if (error) {
+                            if ((error as any).statusCode !== 404) {
+                                setTimeout(() => readBlob(), 10);
+                                return;
+                            }
+                            notFound = true;
+                        }
+
+                        const content = notFound ? null : JSON.parse(result);
+                        try {
+                            updatedContent = await update(content, attempt++);
+                        } catch (error) {
+                            reject(error);
                             return;
                         }
-                        notFound = true;
-                    }
 
-                    const content = notFound ? null : JSON.parse(result);
-                    try {
-                        updatedContent = await update(content, attempt++);
-                    } catch (error) {
-                        reject(error);
-                        return;
-                    }
+                        if (updatedContent === content) {
+                            fulfill(content);
+                            return;
+                        }
 
-                    if (updatedContent === content) {
-                        fulfill(content);
-                        return;
-                    }
-
-                    updateBlob(updatedContent, response && response.etag);
-                });
+                        updateBlob(updatedContent, response && response.etag);
+                    });
+                } catch(e) {
+                    clearTimeout(timeoutHandle);
+                    throw e;
+                }
             }
 
             function updateBlob(content: T, etag: string) {
@@ -172,22 +177,27 @@ export class Blob<T> {
                     return;
                 }
 
-                service.createBlockBlobFromText(
-                    container,
-                    blob,
-                    JSON.stringify(content),
-                    etag ? { accessConditions: { EtagMatch: etag } } : {},
-                    (error) => {
-                        if (error) {
-                            setTimeout(() => readBlob(), 10);
-                            return;
-                        }
+                try {
+                    service.createBlockBlobFromText(
+                        container,
+                        blob,
+                        JSON.stringify(content),
+                        etag ? { accessConditions: { EtagMatch: etag } } : {},
+                        (error) => {
+                            if (error) {
+                                setTimeout(() => readBlob(), 10);
+                                return;
+                            }
 
-                        clearTimeout(timeoutHandle);
-                        fulfilled = true;
-                        fulfill(updatedContent);
-                    }
-                );
+                            clearTimeout(timeoutHandle);
+                            fulfilled = true;
+                            fulfill(updatedContent);
+                        }
+                    );
+                } catch(e) {
+                    clearTimeout(timeoutHandle);
+                    throw e;
+                }
             }
 
             readBlob();
