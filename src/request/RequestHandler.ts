@@ -93,6 +93,7 @@ export class RequestHandler<TRequest = any, TResponse = any, TBindings = any> {
                 status: 200,
                 body: handleResult
             };
+            context.done();
         } catch (e: any) {
             if (e === BLOB_TIMEOUT_TOKEN) {
                 return this.respondTimeout(context, "Blob operation has timed out.");
