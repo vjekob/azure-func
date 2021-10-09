@@ -190,6 +190,13 @@ describe("Testing v2 RequestValidator", () => {
         expect(() => validator.validate(request)).not.toThrowError();
     });
 
+    it("Fails on undefined value", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", { "string": "string" });
+        const request = new Mock.Request("GET", { "string": undefined });
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
     it("Fails on multi-element array with incorrect types", () => {
         const validator = new RequestValidator();
         validator.expect("body", { "number": "number[]" });
