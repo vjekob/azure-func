@@ -23,6 +23,22 @@ describe("Testing RequestHandler with Blob operations", () => {
         expect(context.res.status).toBe(500);
     });
 
+    // This test is relevant not only for testability!
+    // Any unhandled error inside optimisticUpdate callback would keep the timeout handle still running.
+    // Very similar to the test immediately one up from here, just far more relevant as it affects runtime, too!
+    it("Gracefully cleans up after an unhandled error in optimisticUpdate callback", async () => {
+        Mock.useStorage({});
+        const handler = new RequestHandler(async (req) => {
+            const blob = new Blob("_mock_");
+            await blob.optimisticUpdate((b: any) => {
+                let { a } = b; // This throws, because it cannot destructure
+            });
+        });
+        const context = new Mock.Context(new MockRequest("GET"));
+        await handler.azureFunction(context, context.req);
+        expect(context.res.status).toEqual(500);
+    });
+
     it("Succeeds when Blob operation is faster than timeout", async () => {
         const storage: any = {};
         const key = "test.json";

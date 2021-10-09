@@ -155,6 +155,7 @@ export class Blob<T> {
                         try {
                             updatedContent = await update(content, attempt++);
                         } catch (error) {
+                            clearTimeout(timeoutHandle);
                             reject(error);
                             return;
                         }
