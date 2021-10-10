@@ -39,11 +39,16 @@ export class RequestValidator {
 
             let expectedType = template[propertyExpected];
             let values = target[property];
-            if (expectedType.endsWith("[]")) {
+            const isArrayMandatory = expectedType.endsWith("[]");
+            const isArrayOptional = expectedType.endsWith("[?]");
+            if (isArrayMandatory || isArrayOptional) {
                 if (!Array.isArray(values)) {
-                    throw new Error(`Property "${property}" must be an array`);
+                    if (isArrayMandatory) {
+                        throw new Error(`Property "${property}" must be an array`);
+                    }
+                    values = [values];
                 }
-                expectedType = expectedType.substr(0, expectedType.length - 2);
+                expectedType = expectedType.substr(0, expectedType.length - (isArrayMandatory ? 2 : 3));
             } else {
                 values = [values];
             }
@@ -77,6 +82,10 @@ export class RequestValidator {
             let type = template[key];
             if (type.endsWith("[]")) {
                 type = type.substr(0, type.length - 2);
+            } else {
+                if (type.endsWith("[?]")) {
+                    type = type.substr(0, type.length - 3);
+                }
             }
             if (!VALID_TYPES.includes(type)) {
                 throw new Error(`Validator expect template specifies incorrect type for property "${key}": ${type}. Valid types are: ${VALID_TYPES}`)

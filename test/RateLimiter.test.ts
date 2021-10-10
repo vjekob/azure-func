@@ -15,7 +15,8 @@ async function invokeHandler(withLimit = true) {
             status: 200,
             body: undefined
         } as any,
-        log: jest.fn()
+        log: jest.fn(),
+        done: jest.fn(),
     } as any;
     await handler.azureFunction(context, context.req);
     return context.res;
