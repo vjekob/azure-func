@@ -1,6 +1,6 @@
 {
   "name": "@vjeko.com/azure-func",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Helper package for Azure Functions by Vjeko.com",
   "main": "dist/index.js",
   "types": "dist/index.d.js",
