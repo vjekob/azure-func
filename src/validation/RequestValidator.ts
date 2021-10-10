@@ -23,6 +23,7 @@ export class RequestValidator {
 
     private validateTarget(target: any, template: ExpectTemplate): void {
         for (let propertyExpected of Object.keys(template)) {
+            let targetCheck = propertyExpected === "*" ? { "*": target } : target;
             let property = propertyExpected;
             let optional = false;
             if (propertyExpected.endsWith("?")) {
@@ -30,7 +31,7 @@ export class RequestValidator {
                 property = propertyExpected.substr(0, propertyExpected.length - 1);
             }
 
-            if (!target.hasOwnProperty(property)) {
+            if (!targetCheck.hasOwnProperty(property)) {
                 if (optional) {
                     continue;
                 }
@@ -38,7 +39,7 @@ export class RequestValidator {
             }
 
             let expectedType = template[propertyExpected];
-            let values = target[property];
+            let values = targetCheck[property];
             const isArrayMandatory = expectedType.endsWith("[]");
             const isArrayOptional = expectedType.endsWith("[?]");
             if (isArrayMandatory || isArrayOptional) {
@@ -74,9 +75,14 @@ export class RequestValidator {
         }
     }
 
-    public expect(target: ValidationTarget, template: ExpectTemplate) {
-        if (typeof template !== "object" || !template) {
-            throw new Error("Validator expect template must be an object.");
+    public expect(target: ValidationTarget, template: ExpectTemplate | string) {
+        if ((typeof template !== "string" && typeof template !== "object") || !template) {
+            throw new Error("Validator expect template must be an object or a string.");
+        }
+        if (typeof template === "string") {
+            template = {
+                "*": template
+            };
         }
         for (let key of Object.keys(template)) {
             let type = template[key];

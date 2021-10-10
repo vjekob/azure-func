@@ -79,6 +79,41 @@ describe("Testing v2 RequestValidator", () => {
         expect(() => validator.validate(request)).toThrowError();
     });
 
+    it("Fails on invalid number on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "number");
+        const request = new Mock.Request("GET", "test");
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Succeeds on valid number on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "number");
+        const request = new Mock.Request("GET", 3.14);
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
+    it("Fails on invalid number[] on body, with number passed instead of array", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "number[]");
+        const request = new Mock.Request("GET", 3.14);
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Fails on invalid number[] on body, with array passed instead of array", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "number[]");
+        const request = new Mock.Request("GET", [3.14, "apple"]);
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Succeeds on valid number[] on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "number[]");
+        const request = new Mock.Request("GET", [3.14, 4.25]);
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
     it("Fails on invalid PositiveNumber", async () => {
         const validator = new RequestValidator();
         validator.expect("body", { "PositiveNumber": "PositiveNumber" });
@@ -142,7 +177,7 @@ describe("Testing v2 RequestValidator", () => {
         validator.expect("query", { "test": "defined" });
         validator.expect("headers", { "x-test": "defined" });
         validator.expect("body", { "number": "number", "strings": "string[]" });
-        const request = new Mock.Request("GET", { number: 1, strings: [] }, { "Test": "wrong"}, { "x-test-old": "definition" });
+        const request = new Mock.Request("GET", { number: 1, strings: [] }, { "Test": "wrong" }, { "x-test-old": "definition" });
         expect(() => validator.validate(request)).toThrowError();
     });
 
@@ -151,7 +186,7 @@ describe("Testing v2 RequestValidator", () => {
         validator.expect("query", { "test": "defined" });
         validator.expect("headers", { "x-test": "defined" });
         validator.expect("body", { "number": "number", "strings": "string[]" });
-        const request = new Mock.Request("GET", { number: 1, strings: [] }, { "test": "correct"}, { "x-test": "definition" });
+        const request = new Mock.Request("GET", { number: 1, strings: [] }, { "test": "correct" }, { "x-test": "definition" });
         expect(() => validator.validate(request)).not.toThrowError();
     });
 
@@ -208,6 +243,55 @@ describe("Testing v2 RequestValidator", () => {
         const validator = new RequestValidator();
         validator.expect("body", { "test": "Custom[?]" });
         const request = new Mock.Request("GET", { "test": "fourth" });
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Succeeds on valid custom type on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom");
+        const request = new Mock.Request("GET", "second");
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
+    it("Fails on invalid custom array type on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom[]");
+        const request = new Mock.Request("GET", "third");
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Succeeds on valid custom array type on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom[]");
+        const request = new Mock.Request("GET", ["third"]);
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
+    it("Succeeds on valid custom optional array type, with actual array passed in on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom[?]");
+        const request = new Mock.Request("GET", ["first", "second", "third"]);
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
+    it("Succeeds on valid custom optional array type, with non-array passed in on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom[?]");
+        const request = new Mock.Request("GET", "third");
+        expect(() => validator.validate(request)).not.toThrowError();
+    });
+
+    it("Fails on invalid custom optional array type, with actual array passed in on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom[?]");
+        const request = new Mock.Request("GET", ["fourth"]);
+        expect(() => validator.validate(request)).toThrowError();
+    });
+
+    it("Fails on invalid custom optional array type, with non-array passed in on body", () => {
+        const validator = new RequestValidator();
+        validator.expect("body", "Custom[?]");
+        const request = new Mock.Request("GET", "fourth");
         expect(() => validator.validate(request)).toThrowError();
     });
 
