@@ -22,7 +22,7 @@ export const BLOB_TIMEOUT_TOKEN = Symbol("TIMEOUT_TOKEN");
 
 export class Blob<T> {
     private _service: azure.BlobService;
-    private _blob: string;
+    private _path: string;
     private _container: string;
     private _leaseId?: string;
 
@@ -32,18 +32,26 @@ export class Blob<T> {
         this._createBlobService = service;
     }
 
-    constructor(blob: string, container?: string, storage?: string) {
+    constructor(path: string, container?: string, storage?: string) {
         this._service = Blob._createBlobService(storage ? process.env[storage] as string : connectionString);
-        this._blob = blob;
+        this._path = path;
         this._container = container || STORAGE_CONTAINER;
     }
 
     private async getProperties(): Promise<azure.BlobService.BlobResult> {
         return new Promise((fulfill) => {
-            this._service.getBlobProperties(this._container, this._blob, (error, result) => {
+            this._service.getBlobProperties(this._container, this._path, (error, result) => {
                 fulfill(result);
             });
         });
+    }
+
+    public get path(): string {
+        return this._path;
+    }
+
+    public get container(): string {
+        return this._container;
     }
 
     async exists(): Promise<boolean> {
@@ -56,7 +64,7 @@ export class Blob<T> {
             return false;
         }
         return new Promise((fulfill) => {
-            this._service.acquireLease(this._container, this._blob, { leaseDuration: 15 }, (error, result) => {
+            this._service.acquireLease(this._container, this._path, { leaseDuration: 15 }, (error, result) => {
                 if (error) {
                     fulfill(false);
                     return;
@@ -72,7 +80,7 @@ export class Blob<T> {
             return false;
         }
         return new Promise((fulfill) => {
-            this._service.releaseLease(this._container, this._blob, this._leaseId!, (error, result) => {
+            this._service.releaseLease(this._container, this._path, this._leaseId!, (error, result) => {
                 if (error) {
                     fulfill(false);
                     return;
@@ -85,7 +93,7 @@ export class Blob<T> {
 
     async read(ignoreError: boolean = false): Promise<T | null> {
         return new Promise((fulfill) => {
-            this._service.getBlobToText(this._container, this._blob, (error, result) => {
+            this._service.getBlobToText(this._container, this._path, (error, result) => {
                 error ? fulfill(ignoreError ? {} as T : null) : fulfill(JSON.parse(result) as T);
             });
         });
@@ -97,7 +105,7 @@ export class Blob<T> {
             options.leaseId = this._leaseId;
         }
         return new Promise((fulfill) => {
-            this._service.deleteBlob(this._container, this._blob, options, (error, result) => {
+            this._service.deleteBlob(this._container, this._path, options, (error, result) => {
                 fulfill(!error);
             });
         });
@@ -122,7 +130,7 @@ export class Blob<T> {
      */
     optimisticUpdate(update: UpdateCallback<T>, timeout = 5000): Promise<T | null> {
         const service = this._service;
-        const blob = this._blob;
+        const blob = this._path;
         const container = this._container;
 
         return new Promise((fulfill, reject) => {

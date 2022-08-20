@@ -89,7 +89,7 @@ describe("Testing Blob mock functionality (necessary for correctness of other te
             }, Math.round(Math.random() * 2));
         });
 
-        let promises = [];
+        let promises: Promise<any>[] = [];
         for (let i = 0; i < 15; i++) {
             promises.push(getPromise(i));
         }
@@ -195,5 +195,15 @@ describe("Testing Blob mock functionality (necessary for correctness of other te
         expect(unlocked1).toStrictEqual(true);
         expect(deleted2).toStrictEqual(true);
         expect(storage[name]).toBeUndefined();
+    });
+
+    it("Exposes public path and container properties", async () => {
+        let name = "__mock__";
+        let container = "__container__";
+
+        const blob = new Blob(name, container);
+        
+        expect(blob.path).toBe(name);
+        expect(blob.container).toBe(container);
     });
 });
