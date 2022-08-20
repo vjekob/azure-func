@@ -81,22 +81,25 @@ describe("Testing Blob mock functionality (necessary for correctness of other te
         let storage = { [name]: [] };
         Mock.useStorage(storage);
 
-        const getPromise = (id: number) => new Promise<void>(fulfill => {
+        let maxAttempts = 0;
+        const getPromise = async (id: number) => {
             const blob = new Blob<number[]>(name);
-            setTimeout(async () => {
-                await blob.optimisticUpdate((data: number[]) => ([...data, id]))
-                fulfill();
-            }, Math.round(Math.random() * 2));
-        });
+            await blob.optimisticUpdate((data: number[], attempts) => {
+                if (attempts > maxAttempts) {
+                    maxAttempts = attempts;;
+                }
+                return [...data, id];
+            });
+        };
 
         let promises: Promise<any>[] = [];
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 50; i++) {
             promises.push(getPromise(i));
         }
         await Promise.all(promises);
 
-        expect(storage[name].length).toBe(15);
-        for (let i = 0; i < 15; i++) {
+        expect(maxAttempts).toBeGreaterThan(1);
+        for (let i = 0; i < 50; i++) {
             let slice = storage[name] as number[];
             expect(slice.includes(i)).toStrictEqual(true);
         }
@@ -202,8 +205,9 @@ describe("Testing Blob mock functionality (necessary for correctness of other te
         let container = "__container__";
 
         const blob = new Blob(name, container);
-        
+
         expect(blob.path).toBe(name);
         expect(blob.container).toBe(container);
     });
+
 });
