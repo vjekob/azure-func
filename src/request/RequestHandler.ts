@@ -89,9 +89,13 @@ export class RequestHandler<TRequest = any, TResponse = any, TBindings = any> {
         try {
             await request.bind();
             const handleResult = await this._handler(request);
+            const headers = typeof handleResult === "object" ? {
+                "Content-Type": "application/json",
+            } : undefined;
             context.res = {
                 status: 200,
-                body: handleResult
+                body: handleResult,
+                headers
             };
         } catch (e: any) {
             if (e === BLOB_TIMEOUT_TOKEN) {
